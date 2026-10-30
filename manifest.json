@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Netwin - Cadastro Survey",
+  "version": "0.1.0",
+  "description": "Gera pacotes de survey (XML + imagens) a partir de um CSV e de um roteiro XML.",
+  "permissions": [
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://netwin.vtal.intra/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://netwin.vtal.intra/*"
+      ],
+      "js": [
+        "lib/jszip.min.js",
+        "content/content.js"
+      ],
+      "css": [
+        "content/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/img_preta_1.jpg",
+        "assets/img_preta_2.jpg",
+        "assets/img_preta_3.jpg"
+      ],
+      "matches": [
+        "*://netwin.vtal.intra/*"
+      ]
+    }
+  ]
+}
