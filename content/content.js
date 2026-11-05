@@ -386,7 +386,7 @@
     modal.setAttribute("aria-labelledby", "nw-survey-title");
 
     const header = createElement("div", "nw-survey-header");
-    const title = createElement("h2", "nw-survey-title", "Edifícil");
+    const title = createElement("h2", "nw-survey-title", "Edifício");
     title.id = "nw-survey-title";
     const headerClose = createElement("button", "nw-survey-icon-btn", "\u00d7");
     headerClose.type = "button";
@@ -1582,7 +1582,88 @@
     return ucs;
   }
 
-  function buildEdificioXml(index, linha, roteiro, config, ucs) {
+  function buildCaixasEntradaXml(ucs) {
+    const totalUCs = ucs.length;
+    const ucsXml = ucs.map(
+      (uc) => `        <uc>
+          <destinacao>${escapeXml(uc.destinacao)}</destinacao>
+          <id_complemento3>${escapeXml(uc.id_complemento3)}</id_complemento3>
+          <argumento3>${escapeXml(uc.argumento3)}</argumento3>
+          <id_complemento4>${escapeXml(uc.id_complemento4)}</id_complemento4>
+          <argumento4_logico>${escapeXml(uc.argumento4_logico)}</argumento4_logico>
+          <argumento4_real>${escapeXml(uc.argumento4_real)}</argumento4_real>
+        </uc>`
+    ).join("\n");
+
+    return [
+      "  <caixasEntrada>",
+      "    <caixaEntrada>",
+      "      <id>1</id>",
+      "      <dimensoes>",
+      "        <x>600</x>",
+      "        <y>600</y>",
+      "        <z>100</z>",
+      "      </dimensoes>",
+      `      <totalUCs>${totalUCs}</totalUCs>`,
+      "      <piso>0</piso>",
+      "      <localizacao>Corredor</localizacao>",
+      "      <id_divisao_int>117</id_divisao_int>",
+      "      <entradasCabos>",
+      "        <entradaCabos>",
+      "          <tipo>Subterrânea</tipo>",
+      "          <comprimento>50</comprimento>",
+      "          <passagemFO>Entre 1 cm e 2 cm</passagemFO>",
+      "        </entradaCabos>",
+      "      </entradasCabos>",
+      "      <alojamentos>",
+      "        <alojamento>",
+      "          <modelo>",
+      "            <id>10430</id>",
+      "            <descricao>12 / 320 x 187 x 105 / CDOI 12 SC-APC (FURUKAWA)</descricao>",
+      "          </modelo>",
+      "        </alojamento>",
+      "      </alojamentos>",
+      "      <prumadas>",
+      "        <prumada>",
+      "          <id>1</id>",
+      "          <idCE>1</idCE>",
+      "          <valoresPassagemFO>Entre 1 cm e 2 cm</valoresPassagemFO>",
+      `          <totalUCs>${totalUCs}</totalUCs>`,
+      "          <totalPisos>4</totalPisos>",
+      "          <id_divisao_int>117</id_divisao_int>",
+      "          <atendimento>P</atendimento>",
+      "          <distanciaCE>50</distanciaCE>",
+      "          <caixasPiso>",
+      "            <caixaPiso>",
+      "              <id>1</id>",
+      "              <piso>1</piso>",
+      "              <idPrumada>1</idPrumada>",
+      "              <dimensoes>",
+      "                <x>600</x>",
+      "                <y>600</y>",
+      "                <z>100</z>",
+      "              </dimensoes>",
+      "              <alojamentos>",
+      "                <alojamento>",
+      "                  <modelo>",
+      "                    <id>10489</id>",
+      "                    <descricao>16 / 200 x 126 x 50 / CDOIA 16 (FURUKAWA)</descricao>",
+      "                  </modelo>",
+      "                </alojamento>",
+      "              </alojamentos>",
+      "            </caixaPiso>",
+      "          </caixasPiso>",
+      "          <ucs>",
+      ucsXml,
+      "          </ucs>",
+      "        </prumada>",
+      "      </prumadas>",
+      "    </caixaEntrada>",
+      "  </caixasEntrada>"
+    ].join("\n");
+  }
+
+  function buildEdificioXml(index, linha, roteiro, config, ucs, infra) {
     const match = buscarRoteiro(roteiro, linha);
     const cep = match ? match.cep : "";
     const id_roteiro = match ? match.id : "";
@@ -1621,6 +1702,11 @@
       `    <argumento3>${escapeXml(argumento3)}</argumento3>`
     ].join("\n") : "";
 
+    const complemento1Xml = (id_complemento1 || argumento1) ? [
+      `    <id_complemento1>${escapeXml(id_complemento1)}</id_complemento1>`,
+      `    <argumento1>${escapeXml(argumento1)}</argumento1>`
+    ].join("\n") : "";
+
     const ucsXml = ucs.map(
       (uc) => `    <uc>
       <destinacao>${escapeXml(uc.destinacao)}</destinacao>
@@ -1647,8 +1733,7 @@
       "  <enderecoEdificio>",
       `    <logradouro>${escapeXml(logradouro)}</logradouro>`,
       `    <numero_fachada>${escapeXml(numero_fachada)}</numero_fachada>`,
-      `    <id_complemento1>${escapeXml(id_complemento1)}</id_complemento1>`,
-      `    <argumento1>${escapeXml(argumento1)}</argumento1>`,
+      ...(complemento1Xml ? [`\n${complemento1Xml}`] : []),
       ...(complemento2Xml ? [`\n${complemento2Xml}`] : []),
       ...(complemento3Xml ? [`\n${complemento3Xml}`] : []),
       `    <cep>${escapeXml(cep)}</cep>`,
@@ -1675,9 +1760,8 @@
       "    <fotoFachadaEdificio>img preta_2.jpg</fotoFachadaEdificio>",
       "  </infoFotos>",
       "  <fibrasConcorrencia>133856749</fibrasConcorrencia>",
-      "  <ucs>",
-      ucsXml,
-      "  </ucs>",
+      ...(infra === "com" ? [buildCaixasEntradaXml(ucs)] : []),
+      ...(infra === "com" ? [] : ["  <ucs>", ucsXml, "  </ucs>"]),
       "</edificio>",
       ""
     ].join("\n");
@@ -1840,10 +1924,10 @@
         const folder = zip.folder(folderName);
 
         let ucs = [];
-        if (infra === "sem") {
+        if (infra === "sem" || infra === "com") {
           ucs = gerarUcs(config);
         }
-        const xml = buildEdificioXml(index + 1, rows[index], roteiro, config, ucs);
+        const xml = buildEdificioXml(index + 1, rows[index], roteiro, config, ucs, infra);
 
         folder.file(`${folderName}.xml`, xml);
         completedUnits += 1;
